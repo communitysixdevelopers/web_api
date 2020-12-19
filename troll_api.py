@@ -43,10 +43,10 @@ class FindTrollApi:
         """
         self._treshold = treshold
 
-    def get_count_available_requests(self,
-                                     save_to_json=False, 
-                                     path_to_save="available_requests_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")),
-                                     timeout=300):
+    def get_user_api_status(self,
+                            save_to_json=False, 
+                            path_to_save="available_requests_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")),
+                            timeout=300):
         """Метод для определения доступного количества запросов пользователя
 
         Args:
@@ -58,31 +58,8 @@ class FindTrollApi:
             dict: параметры доступных запросов для пользователя
         """
         answer = requests.post(
-            self._url_to_server + "/get_query_left", 
+            self._url_to_server + "/get_user_api_status", 
             data=json.dumps({"key_api":self._key_api}), 
-            headers=self._headers,
-        )
-        response = answer.json()
-        if save_to_json: self._save_to_json(response, path_to_save)
-        return response
-        
-    def get_available_type_parsers(self,
-                                    save_to_json=False, 
-                                    path_to_save="available_parsers_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")),
-                                    timeout=300):
-        """Метод для определения доступного количества запросов пользователя
-
-        Args:
-            save_to_json (bool): сохранение полученной информации в файл. Defaults to False.
-            path_to_save (str): путь до сохраняемого файла. Defaults to "available_parsers_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")).
-            timeout (int): максимальное время ожидания ответа от сервера, сек. Defaults to 300.
-
-        Returns:
-            dict: параметры доступных типов парсеров для порталов
-        """
-        answer = requests.post(
-            self._url_to_server + "/get_available_parsers", 
-            data=json.dumps({"key_api":self._key_api}),
             headers=self._headers,
         )
         response = answer.json()
@@ -98,8 +75,8 @@ class FindTrollApi:
         """Формирование запроса на сервер и получение данных о вероятности троллинга при ответе на вопрос
 
         Args:
-            question (str, list): [description]
-            answer (str, list): [description]
+            question (str, list): вопрос
+            answer (str, list): ответ
             save_to_json (bool): сохранение полученной информации в файл. Defaults to False.
             path_to_save (str): путь до сохраняемого файла. Defaults to "request_proba_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")).
             timeout (int): максимальное время ожидания ответа от сервера, сек. Defaults to 300.
@@ -154,22 +131,48 @@ class FindTrollApi:
         response = answer.json()
         if save_to_json: self._save_to_json(response, path_to_save)
         return response
+    
+    def get_interpretation(self, 
+                  question,
+                  answer,
+                  n_max_top=5, 
+                  save_to_json=False, 
+                  path_to_save="request_proba_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")),
+                  timeout=300):
+        """Формирование запроса на сервер и получение данных о вероятности троллинга при ответе на вопрос
+
+        Args:
+            question (str): вопрос
+            answer (str): ответ
+            n_max_top (int): число рассматриваемых признаков модели. Defaults to 5.
+            save_to_json (bool): сохранение полученной информации в файл. Defaults to False.
+            path_to_save (str): путь до сохраняемого файла. Defaults to "request_proba_{}.json".format(datetime.today().strftime("%Y-%m-%d_%H.%M.%S")).
+            timeout (int): максимальное время ожидания ответа от сервера, сек. Defaults to 300.
+
+        Returns:
+            dict: данные о вероятности троллинга при ответе на вопрос
+        """
+        answer = requests.post(
+            self._url_to_server + "/get_interpretation", 
+            data=json.dumps({
+                "question":question,
+                "answer":answer,
+                "n_max_top":n_max_top,
+                "key_api":self._key_api
+            }), 
+            headers=self._headers,
+            timeout=timeout
+        )
+        response = answer.json()
+        if save_to_json: self._save_to_json(response, path_to_save)
+        return response
 
 if __name__ == "__main__":
     api = FindTrollApi(key_api="qwerty")
-    N = 7
-    question = ["questionquestion"] * N
-    answer = "answer"
+    question = "123"
+    answer = "123"
     link = "1234567"
     t1 = time()
-    data_ = api.get_proba(question, answer, save_to_json=True)
-    print(time()-t1)
-    """
-    data1 = {
-        "question":["questionquestion"]*N,
-        "answer":"answer",
-        "link":"1234567"
-    }
-    with open("path_to_save.json", "w", encoding="utf-8") as write_file:
-                json.dump(data1, write_file, indent=2, ensure_ascii=False)
-    """
+    data_ = api.get_interpretation("123","123")
+    print(data_)
+    # print(time()-t1)
